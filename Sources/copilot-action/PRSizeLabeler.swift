@@ -52,6 +52,8 @@ struct PRSizeLabeler: AsyncParsableCommand {
       throw StringError("could not load event data at \(eventPath)")
     }
 
+    print(String(data: eventData, using: .utf8)!)
+
     let pullRequestEvent = try JSONDecoder().decode(PullRequestEvent.self, from: eventData)
 
     print("The pull has \(pullRequestEvent.additions + pullRequestEvent.deletions) changed lines")
