@@ -10,6 +10,7 @@ RUN cd swift-format && git checkout e6b8c60 && swift build -c release
 FROM swift:5.6.1-slim
 COPY --from=builder /swift/code/.build/release/copilot-action /usr/local/bin
 COPY --from=builder /swift/swift-format/.build/release/swift-format  /usr/local/bin
+RUN add-apt-repository -y ppa:git-core/ppa
 RUN apt-get update
 RUN apt-get install -y git
 
