@@ -1,7 +1,12 @@
 name: Copilot Swift PR Actions
 description: Collection of PR Actions geared mostly towards iOS projects
-
+inputs:
+  action_name:
+    description: 'Which action should be invoked'
+    required: true
 runs:
   using: docker
   image: Dockerfile
+  args:
+    - ${{ inputs.action_name }}
 
