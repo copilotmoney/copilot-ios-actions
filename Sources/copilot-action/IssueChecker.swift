@@ -34,7 +34,7 @@ struct IssueChecker: AsyncParsableCommand {
     print(pullRequestEvent.pull_request.title)
     print(pullRequestEvent.pull_request.head.ref)
 
-    let issuePrefix = try getStringEnv("ISSUE_CHECKER_PREFIX") as String
+    let issuePrefix = try getStringEnv("ISSUE_CHECKEsR_PREFIX") as String
 
     let inputsToCheck = [
       pullRequestEvent.pull_request.body,
