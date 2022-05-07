@@ -36,7 +36,7 @@ struct GithubConfiguration: APIConfiguration {
 extension APIEndpoint {
   static func setLabels(repo: String, pullRequestID: Int) -> Self {
     APIEndpoint {
-      "/repos/\(repo)/issues/\(pullRequestID)"
+      "/repos/\(repo)/issues/\(pullRequestID)/labels"
       HTTPMethod.put
     }
   }
@@ -52,20 +52,19 @@ struct PRSizeLabeler: AsyncParsableCommand {
     let repo = try getEnv(key: "GITHUB_REPOSITORY")
     let eventPath = try getEnv(key: "GITHUB_EVENT_PATH")
 
-    guard let eventData = try String(contentsOfFile: eventPath).data(using: .utf8) else {
-      throw StringError("could not load event data at \(eventPath)")
-    }
+//    guard let eventData = try String(contentsOfFile: eventPath).data(using: .utf8) else {
+//      throw StringError("could not load event data at \(eventPath)")
+//    }
+//
+//    let pullRequestEvent = try JSONDecoder().decode(PullRequestEvent.self, from: eventData)
 
-    print(String(data: eventData, encoding: .utf8)!)
-
-    let pullRequestEvent = try JSONDecoder().decode(PullRequestEvent.self, from: eventData)
-
-    print("The pull has \(pullRequestEvent.pull_request.additions + pullRequestEvent.pull_request.deletions) changed lines")
+//    print("The pull has \(pullRequestEvent.pull_request.additions + pullRequestEvent.pull_request.deletions) changed lines")
 
     let provider = APIProvider(configuration: GithubConfiguration(token: githubToken))
+
     let body = LabelsChangeRequest(labels: ["XS"])
     try await provider.request(
-      .setLabels(repo: repo, pullRequestID: pullRequestEvent.number),
+      .setLabels(repo: "copilotmoney/copilot-ios", pullRequestID: 1535),
       body: body
     )
   }
