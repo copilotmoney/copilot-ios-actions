@@ -22,7 +22,7 @@ struct IssueChecker: AsyncParsableCommand {
   )
 
   func run() async throws {
-    let eventPath = try getEnv("GITHUB_EVENT_PATH")
+    let eventPath = try getStringEnv("GITHUB_EVENT_PATH") as String
 
     guard let eventData = try String(contentsOfFile: eventPath).data(using: .utf8) else {
       throw StringError("could not load event data at \(eventPath)")
@@ -34,7 +34,7 @@ struct IssueChecker: AsyncParsableCommand {
     print(pullRequestEvent.pull_request.title)
     print(pullRequestEvent.pull_request.head.ref)
 
-    let issuePrefix = try getInputEnv("ISSUE_CHECKER_PREFIX") as String
+    let issuePrefix = try getStringEnv("ISSUE_CHECKER_PREFIX") as String
 
     let inputsToCheck = [
       pullRequestEvent.pull_request.body,

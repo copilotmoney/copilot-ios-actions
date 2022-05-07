@@ -15,7 +15,7 @@ struct CopilotAction: AsyncParsableCommand {
 }
 
 extension ParsableCommand {
-  func getEnv(_ key: String, defaultValue: String? = nil) throws -> String {
+  func getStringEnv(_ key: String, defaultValue: String? = nil) throws -> String {
     guard let value = ProcessInfo.processInfo.environment[key] ?? defaultValue else {
       throw StringError("\(key) environment variable not set")
     }
@@ -23,16 +23,9 @@ extension ParsableCommand {
     return value
   }
 
-  func getInputEnv(_ key: String, defaultValue: String? = nil) throws -> String {
-    guard let value = ProcessInfo.processInfo.environment["INPUT_" + key] ?? defaultValue else {
-      throw StringError("\(key) environment variable not set")
-    }
 
-    return value
-  }
-
-  func getInputEnv(_ key: String, defaultValue: Int? = nil) throws -> Int {
-    let envValue = ProcessInfo.processInfo.environment["INPUT_" + key]
+  func getIntEnv(_ key: String, defaultValue: Int? = nil) throws -> Int {
+    let envValue = ProcessInfo.processInfo.environment[key]
     guard let value = envValue.flatMap({ Int($0) }) ?? defaultValue else {
       throw StringError("\(key) environment variable not set")
     }

@@ -35,9 +35,9 @@ struct PRSizeLabeler: AsyncParsableCommand {
   )
 
   func run() async throws {
-    let githubToken = try getEnv("GITHUB_TOKEN")
-    let repo = try getEnv("GITHUB_REPOSITORY")
-    let eventPath = try getEnv("GITHUB_EVENT_PATH")
+    let githubToken = try getStringEnv("GITHUB_TOKEN")
+    let repo = try getStringEnv("GITHUB_REPOSITORY")
+    let eventPath = try getStringEnv("GITHUB_EVENT_PATH")
 
     guard let eventData = try String(contentsOfFile: eventPath).data(using: .utf8) else {
       throw StringError("could not load event data at \(eventPath)")
@@ -51,16 +51,16 @@ struct PRSizeLabeler: AsyncParsableCommand {
     print("The pull request has \(totalLinesChanged) changed lines")
 
     let label: String
-    if try totalLinesChanged < getInputEnv("PR_SIZE_XS_LIMIT", defaultValue: 10) {
-      label = try getInputEnv("PR_SIZE_XS_LABEL", defaultValue: "XS")
-    } else if try totalLinesChanged < getInputEnv("PR_SIZE_S_LIMIT", defaultValue: 100) {
-      label = try getInputEnv("PR_SIZE_S_LABEL", defaultValue: "S")
-    } else if try totalLinesChanged < getInputEnv("PR_SIZE_M_LIMIT", defaultValue: 500) {
-      label = try getInputEnv("PR_SIZE_M_LABEL", defaultValue: "M")
-    } else if try totalLinesChanged < getInputEnv("PR_SIZE_L_LIMIT", defaultValue: 1000) {
-      label = try getInputEnv("PR_SIZE_L_LABEL", defaultValue: "L")
+    if try totalLinesChanged < getIntEnv("PR_SIZE_XS_LIMIT", defaultValue: 10) {
+      label = try getStringEnv("PR_SIZE_XS_LABEL", defaultValue: "XS")
+    } else if try totalLinesChanged < getIntEnv("PR_SIZE_S_LIMIT", defaultValue: 100) {
+      label = try getStringEnv("PR_SIZE_S_LABEL", defaultValue: "S")
+    } else if try totalLinesChanged < getIntEnv("PR_SIZE_M_LIMIT", defaultValue: 500) {
+      label = try getStringEnv("PR_SIZE_M_LABEL", defaultValue: "M")
+    } else if try totalLinesChanged < getIntEnv("PR_SIZE_L_LIMIT", defaultValue: 1000) {
+      label = try getStringEnv("PR_SIZE_L_LABEL", defaultValue: "L")
     } else {
-      label = try getInputEnv("PR_SIZE_XL_LABEL", defaultValue: "XL")
+      label = try getStringEnv("PR_SIZE_XL_LABEL", defaultValue: "XL")
     }
 
     print("Assigning the \(label) label to pull request #\(pullRequestEvent.number)")
