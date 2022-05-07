@@ -6,7 +6,7 @@
       "location" : "https://github.com/sergiocampama/APIBuilder.git",
       "state" : {
         "branch" : "main",
-        "revision" : "58ee851a56b3f833c0de627e15b47d12c0d4f4d4"
+        "revision" : "2cd2ae911295f668d93486657dc463eaaca17841"
       }
     },
     {
@@ -16,15 +16,6 @@
       "state" : {
         "revision" : "f3c9084a71ef4376f2fabbdf1d3d90a49f1fabdb",
         "version" : "1.1.2"
-      }
-    },
-    {
-      "identity" : "weblinking",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sergiocampama/WebLinking",
-      "state" : {
-        "branch" : "main",
-        "revision" : "a5fc2ce2d17bacd037efc9ef4bfa5ecf7913128d"
       }
     }
   ],

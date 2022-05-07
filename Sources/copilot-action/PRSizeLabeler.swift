@@ -2,9 +2,14 @@ import ArgumentParser
 import APIBuilder
 import Foundation
 
-struct PullRequest: Codable {
+struct PullRequestEvent: Codable {
   let additions: Int
   let deletions: Int
+  let number: Int
+}
+
+struct LabelsChangeRequest: Codable {
+  let labels: [String]
 }
 
 struct GithubConfiguration: APIConfiguration {
@@ -24,9 +29,12 @@ struct GithubConfiguration: APIConfiguration {
   }
 }
 
-extension APIEndpoint where T == PullRequest {
-  static func getPullRequest(repo: String, pullRequestID: String) -> Self {
-    APIEndpoint { "/repos/\(repo)/pulls/\(pullRequestID)" }
+extension APIEndpoint {
+  static func setLabels(repo: String, pullRequestID: Int) -> Self {
+    APIEndpoint {
+      "/repos/\(repo)/issues/\(pullRequestID)"
+      HTTPMethod.put
+    }
   }
 }
 
@@ -44,13 +52,16 @@ struct PRSizeLabeler: AsyncParsableCommand {
       throw StringError("could not load event data at \(eventPath)")
     }
 
-    print(String(data: eventData, encoding: .utf8)!)
+    let pullRequestEvent = try JSONDecoder().decode(PullRequestEvent.self, from: eventData)
+
+    print("The pull has \(pullRequestEvent.additions + pullRequestEvent.deletions) changed lines")
 
     let provider = APIProvider(configuration: GithubConfiguration(token: githubToken))
-    let response = try await provider.request(
-      .getPullRequest(repo: repo, pullRequestID: "1550")
+    let body = LabelsChangeRequest(labels: ["XS"])
+    try await provider.request(
+      .setLabels(repo: repo, pullRequestID: pullRequestEvent.number),
+      body: body
     )
-    print("The pull has \(response.additions + response.deletions) changed lines")
   }
 
   private func getEnv(key: String) throws -> String {
