@@ -36,14 +36,28 @@ struct PRSizeLabeler: AsyncParsableCommand {
   )
 
   func run() async throws {
-    guard let githubToken = ProcessInfo.processInfo.environment["GITHUB_TOKEN"] else {
-      throw StringError("GITHUB_TOKEN environment variable not set")
+    let githubToken = try getEnv(key: "GITHUB_TOKEN")
+    let repo = try getEnv(key: "GITHUB_REPOSITORY")
+    let eventPath = try getEnv(key: "GITHUB_EVENT_PATH")
+
+    guard let eventData = try String(contentsOfFile: eventPath).data(using: .utf8) else {
+      throw StringError("could not load event data at \(eventPath)")
     }
+
+    print(String(data: eventData, encoding: .utf8)!)
 
     let provider = APIProvider(configuration: GithubConfiguration(token: githubToken))
     let response = try await provider.request(
-      .getPullRequest(repo: "copilotmoney/copilot-ios", pullRequestID: "1550")
+      .getPullRequest(repo: repo, pullRequestID: "1550")
     )
     print("The pull has \(response.additions + response.deletions) changed lines")
+  }
+
+  private func getEnv(key: String) throws -> String {
+    guard let value = ProcessInfo.processInfo.environment[key] else {
+      throw StringError("\(key) environment variable not set")
+    }
+
+    return value
   }
 }
