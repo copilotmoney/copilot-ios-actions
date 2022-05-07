@@ -35,10 +35,11 @@ struct PRSizeLabeler: AsyncParsableCommand {
     commandName: "pr-size-labeler"
   )
 
-  @Option
-  var githubToken: String
-
   func run() async throws {
+    guard let githubToken = ProcessInfo.processInfo.environment["GITHUB_TOKEN"] else {
+      throw StringError("GITHUB_TOKEN environment variable not set")
+    }
+
     let provider = APIProvider(configuration: GithubConfiguration(token: githubToken))
     let response = try await provider.request(
       .getPullRequest(repo: "copilotmoney/copilot-ios", pullRequestID: "1550")
