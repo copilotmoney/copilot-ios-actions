@@ -52,7 +52,7 @@ struct PRSizeLabeler: AsyncParsableCommand {
       throw StringError("could not load event data at \(eventPath)")
     }
 
-    print(String(data: eventData, using: .utf8)!)
+    print(String(data: eventData, encoding: .utf8)!)
 
     let pullRequestEvent = try JSONDecoder().decode(PullRequestEvent.self, from: eventData)
 
