@@ -2,9 +2,13 @@ import ArgumentParser
 import APIBuilder
 import Foundation
 
-struct PullRequestEvent: Codable {
+struct PullRequest: Codable {
   let additions: Int
   let deletions: Int
+}
+struct PullRequestEvent: Codable {
+
+  let pull_request: PullRequest
   let number: Int
 }
 
@@ -56,7 +60,7 @@ struct PRSizeLabeler: AsyncParsableCommand {
 
     let pullRequestEvent = try JSONDecoder().decode(PullRequestEvent.self, from: eventData)
 
-    print("The pull has \(pullRequestEvent.additions + pullRequestEvent.deletions) changed lines")
+    print("The pull has \(pullRequestEvent.pull_request.additions + pullRequestEvent.pull_request.deletions) changed lines")
 
     let provider = APIProvider(configuration: GithubConfiguration(token: githubToken))
     let body = LabelsChangeRequest(labels: ["XS"])
