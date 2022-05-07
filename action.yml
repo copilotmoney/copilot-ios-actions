@@ -1,0 +1,6 @@
+name: Copilot Swift PR Actions
+description: Collection of PR Actions geared mostly towards iOS projects
+
+runs:
+  using: docker
+  image: Dockerfile
