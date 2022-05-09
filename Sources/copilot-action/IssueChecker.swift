@@ -9,7 +9,7 @@ fileprivate struct PullRequestEvent: Codable {
     fileprivate struct Head: Codable {
       let ref: String
     }
-    let body: String
+    let body: String?
     let title: String
     let head: Head
   }
@@ -30,7 +30,7 @@ struct IssueChecker: AsyncParsableCommand {
 
     let pullRequestEvent = try JSONDecoder().decode(PullRequestEvent.self, from: eventData)
 
-    print(pullRequestEvent.pull_request.body)
+    print(pullRequestEvent.pull_request.body ?? "_no body_")
     print(pullRequestEvent.pull_request.title)
     print(pullRequestEvent.pull_request.head.ref)
 
@@ -40,7 +40,7 @@ struct IssueChecker: AsyncParsableCommand {
       pullRequestEvent.pull_request.body,
       pullRequestEvent.pull_request.title,
       pullRequestEvent.pull_request.head.ref,
-    ]
+    ].compactMap { $0 }
 
     for input in inputsToCheck {
       let range = input
