@@ -35,6 +35,11 @@ struct PRSizeLabeler: AsyncParsableCommand {
   )
 
   func run() async throws {
+    guard try getStringEnv("GITHUB_EVENT_NAME") == "pull_request" else {
+      print("Skipping check for event \(try getStringEnv("GITHUB_EVENT_NAME"))")
+      return
+    }
+
     let githubToken = try getStringEnv("GITHUB_TOKEN")
     let repo = try getStringEnv("GITHUB_REPOSITORY")
     let eventPath = try getStringEnv("GITHUB_EVENT_PATH")

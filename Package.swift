@@ -19,5 +19,6 @@ let package = Package(
         .product(name: "APIBuilder", package: "APIBuilder"),
       ]
     ),
+    .testTarget(name: "CopilotActionTests", dependencies: ["copilot-action"]),
   ]
 )
