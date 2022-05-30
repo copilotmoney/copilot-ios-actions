@@ -48,12 +48,6 @@ struct SemanticTitleChecker: AsyncParsableCommand {
 
     let checker = try SemanticChecker()
     let result = try checker.check(pullRequestEvent.pull_request.title)
-
-    guard validTypes.contains(result.type) else {
-      throw StringError(
-        "invalid type \(result.type), valid types are \(validTypes.joined(separator: ","))"
-      )
-    }
   }
 }
 
@@ -98,6 +92,16 @@ public struct SemanticChecker {
       force = input[forceRange] == "!"
     } else {
       force = false
+    }
+
+    guard validTypes.contains(type) else {
+      throw StringError(
+        "invalid type \(type), valid types are \(validTypes.joined(separator: ","))"
+      )
+    }
+
+    if type == "feat", scope == nil {
+      throw StringError("feat pull requests require scope")
     }
 
     return (type, scope, message, force)

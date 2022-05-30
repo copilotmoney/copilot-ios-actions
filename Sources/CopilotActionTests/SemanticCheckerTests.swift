@@ -52,6 +52,7 @@ final class SemanticCheckerTests: XCTestCase {
       XCTAssertEqual(result.force, false)
       XCTAssertEqual(result.message, "Address location search")
     }
+    XCTAssertThrowsError(try checker.check("feat: Hello, world!"))
 
     XCTAssertThrowsError(try checker.check("Hello, world!"))
     XCTAssertThrowsError(try checker.check(": Hello, world!"))
