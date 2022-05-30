@@ -45,6 +45,14 @@ final class SemanticCheckerTests: XCTestCase {
       XCTAssertEqual(result.message, "Hello, world!")
     }
 
+    do {
+      let result = try checker.check("feat(real-estate): Address location search")
+      XCTAssertEqual(result.type, "feat")
+      XCTAssertEqual(result.scope, "real-estate")
+      XCTAssertEqual(result.force, false)
+      XCTAssertEqual(result.message, "Address location search")
+    }
+
     XCTAssertThrowsError(try checker.check("Hello, world!"))
     XCTAssertThrowsError(try checker.check(": Hello, world!"))
     XCTAssertThrowsError(try checker.check("(scope_underscore): Hello, world!"))

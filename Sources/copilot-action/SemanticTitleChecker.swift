@@ -61,7 +61,7 @@ public struct SemanticChecker {
   private let regex: NSRegularExpression
 
   public init() throws {
-    regex = try NSRegularExpression(pattern: #"^(\w+)(\([\w_]+\))?(!)?: (.*)$"#)
+    regex = try NSRegularExpression(pattern: #"^(\w+)(\([\w_-]+\))?(!)?: (.*)$"#)
   }
 
   @discardableResult
