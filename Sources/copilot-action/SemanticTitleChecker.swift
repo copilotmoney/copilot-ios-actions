@@ -47,15 +47,17 @@ struct SemanticTitleChecker: AsyncParsableCommand {
     print("Checking semantics for: ", pullRequestEvent.pull_request.title)
 
     let checker = try SemanticChecker()
-    let result = try checker.check(pullRequestEvent.pull_request.title)
+    try checker.check(pullRequestEvent.pull_request.title)
   }
 }
 
 public struct SemanticChecker {
   private let regex: NSRegularExpression
+  private let wipRegex: NSRegularExpression
 
   public init() throws {
     regex = try NSRegularExpression(pattern: #"^(\w+)(\([\w_-]+\))?(!)?: (.*)$"#)
+    wipRegex = try NSRegularExpression(pattern: #"\bwip\b"#, options: .caseInsensitive)
   }
 
   @discardableResult
@@ -102,6 +104,13 @@ public struct SemanticChecker {
 
     if type == "feat", scope == nil {
       throw StringError("feat pull requests require scope")
+    }
+
+    if wipRegex.numberOfMatches(
+      in: input,
+      range: NSRange(location: 0, length: input.utf8.count)
+    ) > 0 {
+      throw StringError("Pull request is in progress, remove 'WIP' to pass this check.")
     }
 
     return (type, scope, message, force)

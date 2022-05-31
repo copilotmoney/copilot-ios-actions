@@ -59,5 +59,9 @@ final class SemanticCheckerTests: XCTestCase {
     XCTAssertThrowsError(try checker.check("(scope_underscore): Hello, world!"))
     XCTAssertThrowsError(try checker.check("fix Hello, world!"))
     XCTAssertThrowsError(try checker.check(":Hello, world!"))
+
+    XCTAssertThrowsError(try checker.check("feat(scope): [WIP] Hello, world!"))
+    XCTAssertThrowsError(try checker.check("feat(scope): /WIP/ Hello, world!"))
+    XCTAssertThrowsError(try checker.check("feat(scope): wip Hello, world!"))
   }
 }
