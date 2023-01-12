@@ -11,6 +11,7 @@ struct CopilotAction: AsyncParsableCommand {
       PRSizeLabeler.self,
       IssueChecker.self,
       SemanticTitleChecker.self,
+      ProductLabelChecker.self,
     ]
   )
 }
