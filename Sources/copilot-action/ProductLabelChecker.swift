@@ -132,7 +132,7 @@ struct ProductLabelChecker: AsyncParsableCommand {
     if !reviewers.contains("chuga") {
       try await provider.request(
         .addReviewer(repo: repo, pullRequestID: pullRequestID),
-        body: ReviewerAddRequest(assignees: ["chuga"])
+        body: ReviewerAddRequest(reviewers: ["chuga"])
       )
     }
 
