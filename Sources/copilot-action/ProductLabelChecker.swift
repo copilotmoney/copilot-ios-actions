@@ -28,7 +28,7 @@ fileprivate struct PullRequestReviewEvent: Codable {
 }
 
 fileprivate struct ReviewerAddRequest: Codable {
-  let assignees: [String]
+  let reviewers: [String]
 }
 
 fileprivate struct ReviewResponse: Codable {
@@ -51,7 +51,7 @@ fileprivate struct IssueResponse: Codable {
 extension APIEndpoint {
   static func addReviewer(repo: String, pullRequestID: Int) -> Self {
     APIEndpoint {
-      "/repos/\(repo)/issues/\(pullRequestID)/assignees"
+      "/repos/\(repo)/pulls/\(pullRequestID)/requested_reviewers"
       HTTPMethod.post
     }
   }
