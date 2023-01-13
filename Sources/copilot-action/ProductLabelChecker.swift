@@ -84,13 +84,14 @@ extension APIEndpoint {
   }
 }
 
-
 struct ProductLabelChecker: AsyncParsableCommand {
   static var configuration = CommandConfiguration(
     commandName: "product-label"
   )
 
   func run() async throws {
+    let productApprover = "bastich2"
+
     guard try getStringEnv("GITHUB_EVENT_NAME") != "push" else {
       print("Skipping check for event \(try getStringEnv("GITHUB_EVENT_NAME"))")
       return
@@ -132,7 +133,7 @@ struct ProductLabelChecker: AsyncParsableCommand {
       )
 
       let approvedByProduct = reviews.contains {
-        $0.user.login == "chuga" && $0.state == "APPROVED"
+        $0.user.login == productApprover && $0.state == "APPROVED"
       }
 
       if approvedByProduct {
@@ -165,10 +166,10 @@ struct ProductLabelChecker: AsyncParsableCommand {
 
     let reviewers = issue.assignees.map(\.login)
 
-    if !reviewers.contains("chuga") {
+    if !reviewers.contains(productApprover) {
       try await provider.request(
         .addReviewer(repo: repo, pullRequestID: pullRequestID),
-        body: ReviewerAddRequest(reviewers: ["chuga"])
+        body: ReviewerAddRequest(reviewers: [productApprover])
       )
     }
 
@@ -176,7 +177,7 @@ struct ProductLabelChecker: AsyncParsableCommand {
       .getReviews(repo: repo, pullRequestID: pullRequestID)
     )
 
-    let approvedByProduct = reviews.contains { $0.user.login == "chuga" && $0.state == "APPROVED" }
+    let approvedByProduct = reviews.contains { $0.user.login == productApprover && $0.state == "APPROVED" }
 
     guard approvedByProduct else {
       throw StringError("missing product approval")
