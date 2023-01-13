@@ -18,11 +18,8 @@ fileprivate struct LabelsChangeRequest: Codable {
   let labels: [String]
 }
 
-fileprivate struct LabelsResponse: Codable {
-  fileprivate struct Label: Codable {
-    let name: String
-  }
-  let labels: [Label]
+fileprivate struct LabelResponse: Codable {
+  let name: String
 }
 
 // MARK: - Endpoints
@@ -96,11 +93,11 @@ struct PRSizeLabeler: AsyncParsableCommand {
 
     let provider = APIProvider(configuration: GithubConfiguration(token: githubToken))
 
-    let labelsResponse: LabelsResponse = try await provider.request(
+    let labelsResponse: [LabelResponse] = try await provider.request(
       .getLabels(repo: repo, pullRequestID: pullRequestEvent.number)
     )
 
-    let presentLabels = labelsResponse.labels.map(\.name)
+    let presentLabels = labelsResponse.map(\.name)
 
     let keptLabels = presentLabels.filter { !availableLabelIDs.values.contains($0) }
 
