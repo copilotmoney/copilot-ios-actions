@@ -22,7 +22,7 @@ fileprivate struct PullRequestReviewEvent: Codable {
       let name: String
     }
 
-    let id: Int
+    let number: Int
     let labels: [Label]
     let body: String
   }
@@ -116,7 +116,7 @@ struct ProductLabelChecker: AsyncParsableCommand {
     } else if try getStringEnv("GITHUB_EVENT_NAME") == "pull_request_review" {
       let pullRequestReviewEvent = try JSONDecoder().decode(PullRequestReviewEvent.self, from: eventData)
       existingLabels = pullRequestReviewEvent.pull_request.labels.map(\.name)
-      pullRequestID = pullRequestReviewEvent.pull_request.id
+      pullRequestID = pullRequestReviewEvent.pull_request.number
       pullRequestBody = pullRequestReviewEvent.pull_request.body
     } else {
       throw StringError("unknown event")
