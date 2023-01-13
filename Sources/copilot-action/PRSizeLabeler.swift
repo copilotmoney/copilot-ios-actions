@@ -14,8 +14,15 @@ fileprivate struct PullRequestEvent: Codable {
   let number: Int
 }
 
-struct LabelsChangeRequest: Codable {
+fileprivate struct LabelsChangeRequest: Codable {
   let labels: [String]
+}
+
+fileprivate struct LabelsResponse: Codable {
+  fileprivate struct Label: Codable {
+    let name: String
+  }
+  let labels: [Label]
 }
 
 // MARK: - Endpoints
@@ -25,6 +32,13 @@ extension APIEndpoint {
     APIEndpoint {
       "/repos/\(repo)/issues/\(pullRequestID)/labels"
       HTTPMethod.put
+    }
+  }
+
+  static func getLabels(repo: String, pullRequestID: Int) -> Self {
+    APIEndpoint {
+      "/repos/\(repo)/issues/\(pullRequestID)/labels"
+      HTTPMethod.get
     }
   }
 }
@@ -55,26 +69,44 @@ struct PRSizeLabeler: AsyncParsableCommand {
 
     print("The pull request has \(totalLinesChanged) changed lines")
 
+    let availableLabelIDs = try [
+      "PR_SIZE_XS_LABEL": "XS",
+      "PR_SIZE_S_LABEL": "S",
+      "PR_SIZE_M_LABEL": "M",
+      "PR_SIZE_L_LABEL": "L",
+      "PR_SIZE_XL_LABEL": "XL",
+    ].reduce(into: [:]) {
+      $0[$1.key] = try getStringEnv($1.key, defaultValue: $1.value)
+    }
+
     let label: String
     if try totalLinesChanged < getIntEnv("PR_SIZE_XS_LIMIT", defaultValue: 10) {
-      label = try getStringEnv("PR_SIZE_XS_LABEL", defaultValue: "XS")
+      label = availableLabelIDs["PR_SIZE_XS_LABEL"]!
     } else if try totalLinesChanged < getIntEnv("PR_SIZE_S_LIMIT", defaultValue: 100) {
-      label = try getStringEnv("PR_SIZE_S_LABEL", defaultValue: "S")
+      label = availableLabelIDs["PR_SIZE_S_LABEL"]!
     } else if try totalLinesChanged < getIntEnv("PR_SIZE_M_LIMIT", defaultValue: 500) {
-      label = try getStringEnv("PR_SIZE_M_LABEL", defaultValue: "M")
+      label = availableLabelIDs["PR_SIZE_M_LABEL"]!
     } else if try totalLinesChanged < getIntEnv("PR_SIZE_L_LIMIT", defaultValue: 1000) {
-      label = try getStringEnv("PR_SIZE_L_LABEL", defaultValue: "L")
+      label = availableLabelIDs["PR_SIZE_L_LABEL"]!
     } else {
-      label = try getStringEnv("PR_SIZE_XL_LABEL", defaultValue: "XL")
+      label = availableLabelIDs["PR_SIZE_XL_LABEL"]!
     }
 
     print("Assigning the \(label) label to pull request #\(pullRequestEvent.number)")
 
     let provider = APIProvider(configuration: GithubConfiguration(token: githubToken))
 
+    let labelsResponse: LabelsResponse = try await provider.request(
+      .getLabels(repo: repo, pullRequestID: pullRequestEvent.number)
+    )
+
+    let presentLabels = labelsResponse.labels.map(\.name)
+
+    let keptLabels = presentLabels.filter { !availableLabelIDs.values.contains($0) }
+
     try await provider.request(
       .setLabels(repo: repo, pullRequestID: pullRequestEvent.number),
-      body: LabelsChangeRequest(labels: [label])
+      body: LabelsChangeRequest(labels: keptLabels + [label])
     )
   }
 }
