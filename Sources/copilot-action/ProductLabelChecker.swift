@@ -41,11 +41,11 @@ fileprivate struct ReviewResponse: Codable {
   let user: User
 }
 
-fileprivate struct IssueResponse: Codable {
+fileprivate struct ReviewersResponse: Codable {
   fileprivate struct User: Codable {
     let login: String
   }
-  let assignees: [User]
+  let users: [User]
 }
 
 fileprivate struct UpdatePullRequestRequest: Codable {
@@ -69,9 +69,9 @@ extension APIEndpoint {
     }
   }
 
-  static func getIssue(repo: String, pullRequestID: Int) -> Self {
+  static func getReviewers(repo: String, pullRequestID: Int) -> Self {
     APIEndpoint {
-      "/repos/\(repo)/issues/\(pullRequestID)"
+      "/repos/\(repo)/pulls/\(pullRequestID)/requested_reviewers"
       HTTPMethod.get
     }
   }
@@ -98,6 +98,7 @@ struct ProductLabelChecker: AsyncParsableCommand {
     }
 
     let requiredLabels = ["requires_ui_demo", "requires_ui_check", "skip_ui_check"]
+    let uiReviewedLabel = "ui_reviewed"
 
     let eventPath = try getStringEnv("GITHUB_EVENT_PATH")
     guard let eventData = try String(contentsOfFile: eventPath).data(using: .utf8) else {
@@ -106,18 +107,11 @@ struct ProductLabelChecker: AsyncParsableCommand {
 
     let existingLabels: [String]
     let pullRequestID: Int
-    let pullRequestBody: String
 
     if try getStringEnv("GITHUB_EVENT_NAME") == "pull_request" {
       let pullRequestEvent = try JSONDecoder().decode(PullRequestEvent.self, from: eventData)
       existingLabels = pullRequestEvent.pull_request.labels.map(\.name)
       pullRequestID = pullRequestEvent.number
-      pullRequestBody = pullRequestEvent.pull_request.body
-    } else if try getStringEnv("GITHUB_EVENT_NAME") == "pull_request_review" {
-      let pullRequestReviewEvent = try JSONDecoder().decode(PullRequestReviewEvent.self, from: eventData)
-      existingLabels = pullRequestReviewEvent.pull_request.labels.map(\.name)
-      pullRequestID = pullRequestReviewEvent.pull_request.number
-      pullRequestBody = pullRequestReviewEvent.pull_request.body
     } else {
       throw StringError("unknown event")
     }
@@ -126,26 +120,6 @@ struct ProductLabelChecker: AsyncParsableCommand {
     let githubToken = try getStringEnv("GITHUB_TOKEN")
     let repo = try getStringEnv("GITHUB_REPOSITORY")
     let provider = APIProvider(configuration: GithubConfiguration(token: githubToken))
-
-    if try getStringEnv("GITHUB_EVENT_NAME") == "pull_request_review" {
-      let reviews: [ReviewResponse] = try await provider.request(
-        .getReviews(repo: repo, pullRequestID: pullRequestID)
-      )
-
-      let approvedByProduct = reviews.contains {
-        $0.user.login == productApprover && $0.state == "APPROVED"
-      }
-
-      if approvedByProduct {
-        // Hack to trigger the pull_request event that does all the magic.
-        try await provider.request(
-          .updatePullRequest(repo: repo, pullRequestID: pullRequestID),
-          body: UpdatePullRequestRequest(body: pullRequestBody + " ")
-        )
-      }
-
-      return
-    }
 
     let uiCheckLabel = existingLabels.first {
       requiredLabels.contains($0)
@@ -162,9 +136,11 @@ struct ProductLabelChecker: AsyncParsableCommand {
       return
     }
 
-    let issue: IssueResponse = try await provider.request(.getIssue(repo: repo, pullRequestID: pullRequestID))
+    let issue: ReviewersResponse = try await provider.request(
+      .getReviewers(repo: repo, pullRequestID: pullRequestID)
+    )
 
-    let reviewers = issue.assignees.map(\.login)
+    let reviewers = issue.users.map(\.login)
 
     if !reviewers.contains(productApprover) {
       try await provider.request(
@@ -173,13 +149,7 @@ struct ProductLabelChecker: AsyncParsableCommand {
       )
     }
 
-    let reviews: [ReviewResponse] = try await provider.request(
-      .getReviews(repo: repo, pullRequestID: pullRequestID)
-    )
-
-    let approvedByProduct = reviews.contains { $0.user.login == productApprover && $0.state == "APPROVED" }
-
-    guard approvedByProduct else {
+    if !existingLabels.contains(uiReviewedLabel) {
       throw StringError("missing product approval")
     }
   }
