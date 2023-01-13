@@ -90,7 +90,7 @@ struct ProductLabelChecker: AsyncParsableCommand {
   )
 
   func run() async throws {
-    let productApprover = "bastich2"
+    let productApprover = try getStringEnv("COPILOT_PRODUCT_APPROVER")
 
     guard try getStringEnv("GITHUB_EVENT_NAME") != "push" else {
       print("Skipping check for event \(try getStringEnv("GITHUB_EVENT_NAME"))")
