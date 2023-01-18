@@ -10,7 +10,6 @@ fileprivate struct PullRequestEvent: Codable {
       let name: String
     }
     let labels: [Label]
-    let body: String
   }
   let pull_request: PullRequest
   let number: Int
@@ -24,7 +23,6 @@ fileprivate struct PullRequestReviewEvent: Codable {
 
     let number: Int
     let labels: [Label]
-    let body: String
   }
   let pull_request: PullRequest
 }
@@ -46,10 +44,6 @@ fileprivate struct ReviewersResponse: Codable {
     let login: String
   }
   let users: [User]
-}
-
-fileprivate struct UpdatePullRequestRequest: Codable {
-  let body: String
 }
 
 // MARK: - Endpoints
