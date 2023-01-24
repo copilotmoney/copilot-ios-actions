@@ -39,25 +39,26 @@ struct IssueChecker: AsyncParsableCommand {
     print(pullRequestEvent.pull_request.title)
     print(pullRequestEvent.pull_request.head.ref)
 
-    let issuePrefix = try getStringEnv("ISSUE_CHECKER_PREFIX")
+    let issuePrefixes = try getStringEnv("ISSUE_CHECKER_PREFIX").split(separator: ",")
+    for issuePrefix in issuePrefixes {
+      let inputsToCheck = [
+        pullRequestEvent.pull_request.body,
+        pullRequestEvent.pull_request.title,
+        pullRequestEvent.pull_request.head.ref,
+      ].compactMap { $0 }
 
-    let inputsToCheck = [
-      pullRequestEvent.pull_request.body,
-      pullRequestEvent.pull_request.title,
-      pullRequestEvent.pull_request.head.ref,
-    ].compactMap { $0 }
+      for input in inputsToCheck {
+        let range = input
+          .lowercased()
+          .range(
+            of: "\(issuePrefix.lowercased())\\d{1,}",
+            options: .regularExpression
+          )
 
-    for input in inputsToCheck {
-      let range = input
-        .lowercased()
-        .range(
-          of: "\(issuePrefix.lowercased())\\d{1,}",
-          options: .regularExpression
-        )
-
-      if let range = range {
-        print("Found \(input[range])")
-        return
+        if let range = range {
+          print("Found \(input[range])")
+          return
+        }
       }
     }
 
