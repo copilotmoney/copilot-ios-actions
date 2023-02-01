@@ -130,6 +130,11 @@ struct ProductLabelChecker: AsyncParsableCommand {
       )
     }
 
+    // Return success if the label is not requires_ui_check, as that one needs more checks
+    guard uiCheckLabel == "requires_ui_check" else {
+      return
+    }
+
     let issue: ReviewersResponse = try await provider.request(
       .getReviewers(repo: repo, pullRequestID: pullRequestID)
     )
