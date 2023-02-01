@@ -115,7 +115,7 @@ struct ProductLabelChecker: AsyncParsableCommand {
     let repo = try getStringEnv("GITHUB_REPOSITORY")
     let provider = APIProvider(configuration: GithubConfiguration(token: githubToken))
 
-    if existingLabels.contains("requires_ui_check") {
+    if existingLabels.contains(uiReviewedLabel) {
       // PR has been approved for UI
       return
     }
