@@ -84,7 +84,7 @@ struct ProductLabelChecker: AsyncParsableCommand {
   )
 
   func run() async throws {
-    let productApprover = try getStringEnv("COPILOT_PRODUCT_APPROVER")
+    let productApprovers = try getStringEnv("COPILOT_PRODUCT_APPROVER")
 
     guard try getStringEnv("GITHUB_EVENT_NAME") != "push" else {
       print("Skipping check for event \(try getStringEnv("GITHUB_EVENT_NAME"))")
@@ -139,12 +139,15 @@ struct ProductLabelChecker: AsyncParsableCommand {
       .getReviewers(repo: repo, pullRequestID: pullRequestID)
     )
 
-    let reviewers = issue.users.map(\.login)
+    let reviewers = Set(issue.users.map(\.login))
+    let approvers = Set(productApprovers.components(separatedBy: ","))
 
-    if !reviewers.contains(productApprover) {
+    let missing = approvers.subtracting(reviewers)
+
+    if !missing.isEmpty {
       try await provider.request(
         .addReviewer(repo: repo, pullRequestID: pullRequestID),
-        body: ReviewerAddRequest(reviewers: [productApprover])
+        body: ReviewerAddRequest(reviewers: Array(missing))
       )
     }
 
