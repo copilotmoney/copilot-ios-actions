@@ -5,7 +5,7 @@ RUN swift build -c release
 
 WORKDIR /swift
 RUN git clone https://github.com/apple/swift-format.git
-RUN cd swift-format && git checkout 47eaedd258b5c86e8d75b80fe99cdb02197665a6 && swift build -c release
+RUN cd swift-format && git checkout a2055fa49d0ea9b7056e2c664f7ae07adc6f80ff && swift build -c release
 
 FROM swift:5.7.0-slim
 COPY --from=builder /swift/code/.build/release/copilot-action /usr/local/bin
