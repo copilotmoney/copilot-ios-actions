@@ -62,6 +62,20 @@ struct IssueChecker: AsyncParsableCommand {
       }
     }
 
-    throw StringError("Could not find issue in the PR")
+    let path = try getStringEnv("GITHUB_STEP_SUMMARY")
+    guard let summaryHandle = FileHandle(forWritingAtPath: path) else {
+      throw StringError("Could not find issue in the PR")
+    }
+
+    try summaryHandle.write(contentsOf: """
+      In copilot-ios, all PRs must be associated with a Linear issue, and we couldn't find one.
+      
+      The easiest way is adding the APL-1234 identifier in the description of the PR, but you can
+      also use the issue's generated branch, or adding the issue ID in the PR's title. Once an issue
+      is associated, this check will pass.
+    """.data(using: .utf8)!)
+
+    try summaryHandle.seekToEnd()
+    try summaryHandle.close()
   }
 }

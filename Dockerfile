@@ -1,13 +1,13 @@
-FROM swift:5.10.0 AS builder
+FROM swift:6.0.3 AS builder
 WORKDIR /swift/code
 COPY . ./
 RUN swift build -c release
 
 WORKDIR /swift
 RUN git clone https://github.com/apple/swift-format.git
-RUN cd swift-format && git checkout 7996ac678197d293f6c088a1e74bb778b4e10139 && swift build -c release
+RUN cd swift-format && git checkout 65f9da9aad84adb7e2028eb32ca95164aa590e3b && swift build -c release
 
-FROM swift:5.10.0-slim
+FROM swift:6.0.3-slim
 COPY --from=builder /swift/code/.build/release/copilot-action /usr/local/bin
 COPY --from=builder /swift/swift-format/.build/release/swift-format /usr/local/bin
 RUN apt-get update
