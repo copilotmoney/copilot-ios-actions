@@ -47,11 +47,73 @@ struct SemanticTitleChecker: AsyncParsableCommand {
     print("Checking semantics for: ", pullRequestEvent.pull_request.title)
 
     let checker = try SemanticChecker()
-    try checker.check(pullRequestEvent.pull_request.title)
+    do {
+      try checker.check(pullRequestEvent.pull_request.title)
+    } catch {
+      try printError(error)
+      throw error
+    }
+  }
+
+  private func printError(_ error: SemanticChecker.SemanticCheckerError) throws {
+    let errorTitle = switch error {
+    case .invalidInput(_):
+      "The PR's title does not conform to the expected format."
+    case .invalidType(let type):
+      "`\(type)` is not a valid semantic type."
+    case .missingFeatScope(_):
+      "`feat` PRs are required to have a scope"
+    case .wip:
+      "The PR is marked as a Work in Progress"
+    case .missingMessage(_):
+      "The PR's title does not have a description."
+    case .missingType(_):
+      "The PR's title does not have a semantic type"
+    }
+
+    let path = try getStringEnv("GITHUB_STEP_SUMMARY")
+    guard let summaryHandle = FileHandle(forWritingAtPath: path) else {
+      throw StringError("Could not find issue in the PR")
+    }
+
+    try summaryHandle.write(contentsOf: """
+      > [!CAUTION]
+      > \(errorTitle)
+    
+      In `copilot-ios`, all PRs require titles are required to be written with semantic markers, in
+      the following format:
+    
+      `<type>(<scope>): PR title message`
+      
+      e.g.: 
+      
+      * `feat(finance-goals): Adds new transaction selection list`
+      * `build: Fix build and release script`
+    
+      `type` can be one of the following:
+    
+      \(validTypes.map { "* `\($0)`\n" }.joined(separator: ""))
+      
+      `feat` PRs also are required to have the `scope` value.
+    
+      Finally, PRs with `WIP` in them will fail as it is an indicator that the PR is not ready.
+    """.data(using: .utf8)!)
+
+    try summaryHandle.seekToEnd()
+    try summaryHandle.close()
   }
 }
 
 public struct SemanticChecker {
+  public enum SemanticCheckerError: Error {
+    case wip
+    case invalidType(String)
+    case missingType(String)
+    case missingFeatScope(String)
+    case missingMessage(String)
+    case invalidInput(String)
+  }
+
   private let regex: NSRegularExpression
   private let wipRegex: NSRegularExpression
 
@@ -63,19 +125,19 @@ public struct SemanticChecker {
   @discardableResult
   public func check(
     _ input: String
-  ) throws -> (type: String, scope: String?, message: String, force: Bool) {
+  ) throws(SemanticCheckerError) -> (type: String, scope: String?, message: String, force: Bool) {
     guard let match = regex.firstMatch(
       in: input,
       range: NSRange(location: 0, length: input.utf8.count)
     ) else {
-      throw StringError("invalid input: \(input)")
+      throw SemanticCheckerError.invalidInput(input)
     }
 
     guard let typeRange = Range(match.range(at: 1), in: input) else {
-      throw StringError("missing type from input: \(input)")
+      throw SemanticCheckerError.missingType(input)
     }
     guard let messageRange = Range(match.range(at: 4), in: input) else {
-      throw StringError("missing message from input: \(input)")
+      throw SemanticCheckerError.missingMessage(input)
     }
 
     let type = String(input[typeRange])
@@ -97,20 +159,18 @@ public struct SemanticChecker {
     }
 
     guard validTypes.contains(type) else {
-      throw StringError(
-        "invalid type \(type), valid types are \(validTypes.joined(separator: ","))"
-      )
+      throw SemanticCheckerError.invalidType(type)
     }
 
     if type == "feat", scope == nil {
-      throw StringError("feat pull requests require scope")
+      throw SemanticCheckerError.missingFeatScope(input)
     }
 
     if wipRegex.numberOfMatches(
       in: input,
       range: NSRange(location: 0, length: input.utf8.count)
     ) > 0 {
-      throw StringError("Pull request is in progress, remove 'WIP' to pass this check.")
+      throw SemanticCheckerError.wip
     }
 
     return (type, scope, message, force)

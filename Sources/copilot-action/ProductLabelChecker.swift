@@ -125,6 +125,7 @@ struct ProductLabelChecker: AsyncParsableCommand {
     }
 
     guard uiCheckLabel != nil else {
+      try printMissingLabelError()
       throw StringError(
         "requires at least one of these labels: \(requiredLabels.joined(separator: ", "))"
       )
@@ -154,5 +155,52 @@ struct ProductLabelChecker: AsyncParsableCommand {
     if !existingLabels.contains(uiReviewedLabel) {
       throw StringError("missing product approval")
     }
+  }
+
+  private func printMissingLabelError() throws {
+    let path = try getStringEnv("GITHUB_STEP_SUMMARY")
+    guard let summaryHandle = FileHandle(forWritingAtPath: path) else {
+      throw StringError("Could not find issue in the PR")
+    }
+
+    try summaryHandle.write(contentsOf: """
+      > [!CAUTION]
+      > Could not find the product related label for this PR.
+    
+      In `copilot-ios`, all PRs require specifying whether the change requires review from the 
+      design team. This is done by setting the `skip_ui_check` for cases where there are no UI
+      changes, or the UI changes are gated under a feature flag, or the `requires_ui_check` label,
+      which will add the design team for review. Once they are done with the review, they will set
+      the `ui_reviewed` label and this check will pass.
+      
+      Please apply one of the `skip_ui_check` or `requires_ui_check` label to this PR.
+    """.data(using: .utf8)!)
+
+    try summaryHandle.seekToEnd()
+    try summaryHandle.close()
+  }
+
+  private func printWaitingForUIReview() throws {
+    let path = try getStringEnv("GITHUB_STEP_SUMMARY")
+    guard let summaryHandle = FileHandle(forWritingAtPath: path) else {
+      throw StringError("Could not find issue in the PR")
+    }
+
+    try summaryHandle.write(contentsOf: """
+      > [!WARNING]
+      > Missing UI Check.
+    
+      In `copilot-ios`, all PRs require specifying whether the change requires review from the 
+      design team. This is done by setting the `skip_ui_check` for cases where there are no UI
+      changes, or the UI changes are gated under a feature flag, or the `requires_ui_check` label,
+      which will add the design team for review. Once they are done with the review, they will set
+      the `ui_reviewed` label and this check will pass.
+      
+      This PR is waiting to be approved by someone from the design team, who will need to set the
+      `ui_reviewed` label for this check to pass.
+    """.data(using: .utf8)!)
+
+    try summaryHandle.seekToEnd()
+    try summaryHandle.close()
   }
 }
