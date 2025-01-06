@@ -63,6 +63,7 @@ struct IssueChecker: AsyncParsableCommand {
     }
 
     let path = try getStringEnv("GITHUB_STEP_SUMMARY")
+    print(path, FileHandle(forWritingAtPath: path))
     guard let summaryHandle = FileHandle(forWritingAtPath: path) else {
       throw StringError("Could not find issue in the PR")
     }
