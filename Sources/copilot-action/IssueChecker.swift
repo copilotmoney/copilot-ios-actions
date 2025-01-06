@@ -63,13 +63,15 @@ struct IssueChecker: AsyncParsableCommand {
     }
 
     let path = try getStringEnv("GITHUB_STEP_SUMMARY")
-    print(path, FileHandle(forWritingAtPath: path))
     guard let summaryHandle = FileHandle(forWritingAtPath: path) else {
       throw StringError("Could not find issue in the PR")
     }
 
     try summaryHandle.write(contentsOf: """
-      In copilot-ios, all PRs must be associated with a Linear issue, and we couldn't find one.
+      > [!CAUTION]
+      > Could not find associated Linear issue in this PR.
+    
+      In `copilot-ios`, all PRs must be associated with a Linear issue, and we couldn't find one.
       
       The easiest way is adding the APL-1234 identifier in the description of the PR, but you can
       also use the issue's generated branch, or adding the issue ID in the PR's title. Once an issue
@@ -78,5 +80,7 @@ struct IssueChecker: AsyncParsableCommand {
 
     try summaryHandle.seekToEnd()
     try summaryHandle.close()
+
+    throw StringError("Could not find issue in the PR")
   }
 }
