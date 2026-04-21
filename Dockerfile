@@ -5,7 +5,7 @@ RUN swift build -c release
 
 WORKDIR /swift
 RUN git clone https://github.com/apple/swift-format.git
-RUN cd swift-format && git checkout 65f9da9aad84adb7e2028eb32ca95164aa590e3b && swift build -c release
+RUN cd swift-format && git checkout 602.0.0 && swift build -c release
 
 RUN git clone https://github.com/copilotmoney/appstoreconnect.git
 RUN cd appstoreconnect && swift build -c release
